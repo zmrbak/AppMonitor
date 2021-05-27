@@ -1,4 +1,5 @@
 ﻿using AppMonitor.MouseKeyboardLibrary;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -118,6 +119,7 @@ namespace AppMonitor
                 appConfigJsonFile = Path.Combine(AppDataPath, "AppConfig.Json");
             }
 
+            
             //读取配置
             if (File.Exists(appConfigJsonFile))
             {
@@ -126,16 +128,31 @@ namespace AppMonitor
             }
             else
             {
-                //获取当前计算机的用户名
-                WindowsIdentity windowsIdentity = WindowsIdentity.GetCurrent();
-                string userName = windowsIdentity.Name.Substring(windowsIdentity.Name.LastIndexOf("\\") + 1);
+                //选择默认浏览器
+                RegistryKey registryKey = Registry.ClassesRoot.OpenSubKey(@"http\shell\open\command\");
+                string appRegistryKeyValue = registryKey.GetValue("").ToString().Trim();
+                
+                //第一个双引号，到第二个双引号之间的字符串
+                int startIndex = appRegistryKeyValue.IndexOf("\"");
+                string appString = appRegistryKeyValue.Substring(startIndex + 1, appRegistryKeyValue.IndexOf("\"", startIndex + 2) - 1);
 
-                //默认配置文件
-                appConfig = new AppConfig
+                if(File.Exists(appString))
                 {
-                    Application = @"C:\Users\" + userName + @"\AppData\Roaming\secoresdk\360se6\Application\360se.exe",
-                    IdleTime = 120
-                };
+                    appConfig = new AppConfig
+                    {
+                        Application = appString,
+                        IdleTime = 120
+                    };
+                }
+                else
+                {
+                    //默认配置文件
+                    appConfig = new AppConfig
+                    {
+                        Application = @"请替换为要监视的应用程序的绝对路径",
+                        IdleTime = 120
+                    };
+                }               
 
                 //将默认配置写入磁盘
                 File.WriteAllText(appConfigJsonFile, new JavaScriptSerializer().Serialize(appConfig));
@@ -289,7 +306,7 @@ namespace AppMonitor
             keyboardHook.KeyPress -= new KeyPressEventHandler(keyboardHook_Action);
 
             //定时器
-            timer1.Elapsed -= new System.Timers.ElapsedEventHandler(Timer_TimesUp);            
+            timer1.Elapsed -= new System.Timers.ElapsedEventHandler(Timer_TimesUp);
         }
     }
 }
