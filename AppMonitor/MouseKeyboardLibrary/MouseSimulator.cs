@@ -16,8 +16,10 @@ namespace AppMonitor.MouseKeyboardLibrary
         #region Windows API Code
         [DllImport("user32.dll")]
         static extern int ShowCursor(bool show);
+
         [DllImport("user32.dll")]
         static extern void mouse_event(int flags, int dX, int dY, int buttons, int extraInfo);
+
         const int MOUSEEVENTF_MOVE = 0x1;
         const int MOUSEEVENTF_LEFTDOWN = 0x2;
         const int MOUSEEVENTF_LEFTUP = 0x4;
@@ -28,6 +30,7 @@ namespace AppMonitor.MouseKeyboardLibrary
         const int MOUSEEVENTF_WHEEL = 0x800;
         const int MOUSEEVENTF_ABSOLUTE = 0x8000;
         #endregion
+
         #region Properties
         /// <summary>
         /// Gets or sets a structure that represents both X and Y mouse coordinates
@@ -72,6 +75,7 @@ namespace AppMonitor.MouseKeyboardLibrary
             }
         }
         #endregion
+
         #region Methods
         /// <summary>
         /// Press a mouse button down

@@ -23,6 +23,7 @@ namespace AppMonitor.MouseKeyboardLibrary
             MouseMove
         }
         #endregion
+
         #region Events
         public event MouseEventHandler MouseDown;
         public event MouseEventHandler MouseUp;
@@ -31,12 +32,14 @@ namespace AppMonitor.MouseKeyboardLibrary
         public event EventHandler Click;
         public event EventHandler DoubleClick;
         #endregion
+
         #region Constructor
         public MouseHook()
         {
             _hookType = WH_MOUSE_LL;
         }
         #endregion
+
         #region Methods
         protected override int HookCallbackProcedure(int nCode, int wParam, IntPtr lParam)
         {

@@ -20,6 +20,8 @@ namespace AppMonitor.MouseKeyboardLibrary
             public int x;
             public int y;
         }
+
+
         [StructLayout(LayoutKind.Sequential)]
         protected class MouseHookStruct
         {
@@ -28,6 +30,8 @@ namespace AppMonitor.MouseKeyboardLibrary
             public int wHitTestCode;
             public int dwExtraInfo;
         }
+
+
         [StructLayout(LayoutKind.Sequential)]
         protected class MouseLLHookStruct
         {
@@ -37,6 +41,8 @@ namespace AppMonitor.MouseKeyboardLibrary
             public int time;
             public int dwExtraInfo;
         }
+
+
         [StructLayout(LayoutKind.Sequential)]
         protected class KeyboardHookStruct
         {
@@ -46,34 +52,25 @@ namespace AppMonitor.MouseKeyboardLibrary
             public int time;
             public int dwExtraInfo;
         }
-        [DllImport("user32.dll", CharSet = CharSet.Auto,
-          CallingConvention = CallingConvention.StdCall, SetLastError = true)]
-        protected static extern int SetWindowsHookEx(
-          int idHook,
-          HookProc lpfn,
-          IntPtr hMod,
-          int dwThreadId);
-        [DllImport("user32.dll", CharSet = CharSet.Auto,
-          CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        protected static extern int SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, int dwThreadId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
         protected static extern int UnhookWindowsHookEx(int idHook);
-        [DllImport("user32.dll", CharSet = CharSet.Auto,
-           CallingConvention = CallingConvention.StdCall)]
-        protected static extern int CallNextHookEx(
-          int idHook,
-          int nCode,
-          int wParam,
-          IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        protected static extern int CallNextHookEx(int idHook, int nCode, int wParam, IntPtr lParam);
+
         [DllImport("user32")]
-        protected static extern int ToAscii(
-          int uVirtKey,
-          int uScanCode,
-          byte[] lpbKeyState,
-          byte[] lpwTransKey,
-          int fuState);
+        protected static extern int ToAscii(int uVirtKey, int uScanCode, byte[] lpbKeyState, byte[] lpwTransKey, int fuState);
+
         [DllImport("user32")]
         protected static extern int GetKeyboardState(byte[] pbKeyState);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         protected static extern short GetKeyState(int vKey);
+
         protected delegate int HookProc(int nCode, int wParam, IntPtr lParam);
         protected const int WH_MOUSE_LL = 14;
         protected const int WH_KEYBOARD_LL = 13;
@@ -105,12 +102,14 @@ namespace AppMonitor.MouseKeyboardLibrary
         protected const byte VK_RALT = 0xA5;
         protected const byte LLKHF_ALTDOWN = 0x20;
         #endregion
+
         #region Private Variables
         protected int _hookType;
         protected int _handleToHook;
         protected bool _isStarted;
         protected HookProc _hookCallback;
         #endregion
+
         #region Properties
         public bool IsStarted
         {
@@ -120,17 +119,18 @@ namespace AppMonitor.MouseKeyboardLibrary
             }
         }
         #endregion
+
         #region Constructor
         public GlobalHook()
         {
             Application.ApplicationExit += new EventHandler(Application_ApplicationExit);
         }
         #endregion
+
         #region Methods
         public void Start()
         {
-            if (!_isStarted &&
-              _hookType != 0)
+            if (!_isStarted && _hookType != 0)
             {
                 // Make sure we keep a reference to this delegate!
                 // If not, GC randomly collects it, and a NullReference exception is thrown

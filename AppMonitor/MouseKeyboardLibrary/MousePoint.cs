@@ -11,13 +11,15 @@ namespace AppMonitor.MouseKeyboardLibrary
     /// </summary>
     public struct MousePoint
     {
+        public int X;
+        public int Y;
+
         public MousePoint(Point p)
         {
             X = p.X;
             Y = p.Y;
         }
-        public int X;
-        public int Y;
+
         public static implicit operator Point(MousePoint p)
         {
             return new Point(p.X, p.Y);

@@ -17,29 +17,27 @@ namespace AppMonitor.MouseKeyboardLibrary
         public event KeyEventHandler KeyUp;
         public event KeyPressEventHandler KeyPress;
         #endregion
+
         #region Constructor
         public KeyboardHook()
         {
             _hookType = WH_KEYBOARD_LL;
         }
         #endregion
+
         #region Methods
         protected override int HookCallbackProcedure(int nCode, int wParam, IntPtr lParam)
         {
             bool handled = false;
             if (nCode > -1 && (KeyDown != null || KeyUp != null || KeyPress != null))
             {
-                KeyboardHookStruct keyboardHookStruct =
-                  (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
+                KeyboardHookStruct keyboardHookStruct = (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
                 // Is Control being held down?
-                bool control = ((GetKeyState(VK_LCONTROL) & 0x80) != 0) ||
-                        ((GetKeyState(VK_RCONTROL) & 0x80) != 0);
+                bool control = ((GetKeyState(VK_LCONTROL) & 0x80) != 0) || ((GetKeyState(VK_RCONTROL) & 0x80) != 0);
                 // Is Shift being held down?
-                bool shift = ((GetKeyState(VK_LSHIFT) & 0x80) != 0) ||
-                       ((GetKeyState(VK_RSHIFT) & 0x80) != 0);
+                bool shift = ((GetKeyState(VK_LSHIFT) & 0x80) != 0) || ((GetKeyState(VK_RSHIFT) & 0x80) != 0);
                 // Is Alt being held down?
-                bool alt = ((GetKeyState(VK_LALT) & 0x80) != 0) ||
-                      ((GetKeyState(VK_RALT) & 0x80) != 0);
+                bool alt = ((GetKeyState(VK_LALT) & 0x80) != 0) || ((GetKeyState(VK_RALT) & 0x80) != 0);
                 // Is CapsLock on?
                 bool capslock = (GetKeyState(VK_CAPITAL) != 0);
                 // Create event using keycode and control/shift/alt values found above
@@ -71,10 +69,7 @@ namespace AppMonitor.MouseKeyboardLibrary
                         break;
                 }
                 // Handle KeyPress event
-                if (wParam == WM_KEYDOWN &&
-                  !handled &&
-                  !e.SuppressKeyPress &&
-                  KeyPress != null)
+                if (wParam == WM_KEYDOWN && !handled && !e.SuppressKeyPress && KeyPress != null)
                 {
                     byte[] keyState = new byte[256];
                     byte[] inBuffer = new byte[2];

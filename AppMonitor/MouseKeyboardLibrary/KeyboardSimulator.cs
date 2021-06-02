@@ -15,9 +15,11 @@ namespace AppMonitor.MouseKeyboardLibrary
         #region Windows API Code
         const int KEYEVENTF_EXTENDEDKEY = 0x1;
         const int KEYEVENTF_KEYUP = 0x2;
+
         [DllImport("user32.dll")]
         static extern void keybd_event(byte key, byte scan, int flags, int extraInfo);
         #endregion
+
         #region Methods
         public static void KeyDown(Keys key)
         {
