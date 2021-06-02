@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
@@ -22,6 +23,8 @@ namespace AppMonitor
     {
         //设置定时器
         System.Timers.Timer timer1;
+        System.Timers.Timer timer2;
+        Boolean AppStarting = false;
 
         //配置文件
         string AppDataPath;
@@ -79,10 +82,16 @@ namespace AppMonitor
 
             //启动定时器
             timer1 = new System.Timers.Timer();
-            timer1.Interval = 1000;
+            timer1.Interval = appConfig.CheckInterval;
             timer1.Enabled = true;
             timer1.Elapsed += new System.Timers.ElapsedEventHandler(Timer_TimesUp);
             timer1.Start();
+
+            timer2 = new System.Timers.Timer();
+            timer2.Interval = appConfig.MonitorInterval;
+            timer2.Enabled = true;
+            timer2.Elapsed += new System.Timers.ElapsedEventHandler(Timer_TimesUp2);
+            timer2.Start();
 
             //当前时间
             LastTime = DateTime.Now;
@@ -95,6 +104,36 @@ namespace AppMonitor
             watcher.Filter = "*.json";
             watcher.Changed += Watcher_Changed;
             watcher.EnableRaisingEvents = true;
+        }
+
+        /// <summary>
+        /// 定时检测进程是否启动，如果没启动，则启动
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Timer_TimesUp2(object sender, ElapsedEventArgs e)
+        {
+            //如果进程未启动，则立即启动进程
+            Process[] processes = Process.GetProcesses();
+            Boolean appStarted = false;
+            foreach (var item in processes)
+            {
+                try
+                {
+                    if (item.MainModule.FileName.ToString() == appConfig.Application)
+                    {
+                        appStarted = true;
+                        break;
+                    }
+                }
+                catch { }
+            }
+
+            if (appStarted == false)
+            {
+                //启动进程
+                StartApplicatoin();
+            }
         }
 
         /// <summary>
@@ -184,6 +223,10 @@ namespace AppMonitor
         {
             //重新加载配置文件
             LoadConfigFile();
+
+            //重置计时器参数
+            timer1.Interval = appConfig.CheckInterval;
+            timer2.Interval = appConfig.MonitorInterval;
         }
 
         /// <summary>
@@ -232,7 +275,6 @@ namespace AppMonitor
                     appConfig = new AppConfig
                     {
                         Application = appString,
-                        IdleTime = 120
                     };
                 }
                 else
@@ -241,7 +283,6 @@ namespace AppMonitor
                     appConfig = new AppConfig
                     {
                         Application = @"请替换为要监视的应用程序的绝对路径",
-                        IdleTime = 120
                     };
                 }
 
@@ -303,7 +344,7 @@ namespace AppMonitor
             });
 
             //结束指定进程
-            Process[] processes = Process.GetProcesses();
+            var processes = Process.GetProcesses();
             foreach (var item in processes)
             {
                 try
@@ -313,9 +354,7 @@ namespace AppMonitor
                         item.Kill();
                     }
                 }
-                catch
-                {
-                }
+                catch { }
             }
 
             this.Invoke((EventHandler)delegate
@@ -323,11 +362,31 @@ namespace AppMonitor
                 this.label1.Text = "重启进程！";
             });
 
+            StartApplicatoin();
+        }
+
+        /// <summary>
+        /// 启动应用程序
+        /// </summary>
+        private void StartApplicatoin()
+        {
+            //拒绝启动多个
+            if (AppStarting == true)
+            {
+                return;
+            }
+            else
+            {
+                AppStarting = true;
+            }
+
             //启动进程
             Process.Start(appConfig.Application);
 
             //重启定时器
             timer1.Start();
+            timer2.Start();
+
             LastTime = DateTime.Now;
 
             //鼠标键盘，自从程序重启后未输入过
@@ -339,6 +398,8 @@ namespace AppMonitor
                 WindowState = FormWindowState.Minimized;
                 Hide();
             });
+
+            AppStarting = false;
         }
 
         /// <summary>
