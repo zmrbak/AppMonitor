@@ -9,8 +9,10 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
@@ -51,6 +53,12 @@ namespace AppMonitor
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //只允许启动一个
+            CheckSelfRunning();
+
+            //检查快捷方式
+            CheckAutoStart();
+
             //加载配置文件
             LoadConfigFile();
 
@@ -89,6 +97,89 @@ namespace AppMonitor
             watcher.EnableRaisingEvents = true;
         }
 
+        /// <summary>
+        /// 检查正在运行的副本，结束其他副本
+        /// </summary>
+        private void CheckSelfRunning()
+        {
+            Process[] processes = Process.GetProcesses();
+            foreach (var item in processes)
+            {
+                try
+                {
+                    if (item.MainModule.FileName.ToString() == Application.ExecutablePath)
+                    {
+                        //排除自己
+                        if (item.Id == Process.GetCurrentProcess().Id)
+                        {
+                            continue;
+                        }
+
+                        //结束其他进程
+                        item.Kill();
+                    }
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// 检查注册表，设置自动启动
+        /// </summary>
+        private void CheckAutoStart()
+        {
+            string appName = "AppMonitor";
+            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+            if (registryKey.GetValueNames().Contains(appName))
+            {
+                if (registryKey.GetValue(appName).ToString() == Application.ExecutablePath)
+                {
+                    registryKey.Close();
+                    return;
+                }
+            }
+
+            //路径不对，删除此项,需要权限
+            WindowsIdentity current = WindowsIdentity.GetCurrent();
+            WindowsPrincipal windowsPrincipal = new WindowsPrincipal(current);
+            if (windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator) == false)
+            {
+                MessageBox.Show("首次执行，请用管理员权限运行！");
+
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.UseShellExecute = true;
+                startInfo.WorkingDirectory = Environment.CurrentDirectory;
+                startInfo.FileName = Application.ExecutablePath;
+
+                //设置启动动作,确保以管理员身份运行
+                startInfo.Verb = "runas";
+                try
+                {
+                    Process.Start(startInfo);
+                }
+                catch { }
+
+                //退出
+                Application.Exit();
+                return;
+            }
+
+            //以管理员权限运行，设置注册表后，程序退出！
+            //创建注册表
+            registryKey.SetValue(appName, Application.ExecutablePath);
+            registryKey.Close();
+
+            //退出
+            MessageBox.Show("设置完毕，请双击重新启动程序！");
+            Application.Exit();
+            return;
+        }
+
+        /// <summary>
+        /// 监控配置文件，一旦配置文件改变，则重新加载配置文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             //重新加载配置文件
@@ -119,7 +210,7 @@ namespace AppMonitor
                 appConfigJsonFile = Path.Combine(AppDataPath, "AppConfig.Json");
             }
 
-            
+
             //读取配置
             if (File.Exists(appConfigJsonFile))
             {
@@ -131,12 +222,12 @@ namespace AppMonitor
                 //选择默认浏览器
                 RegistryKey registryKey = Registry.ClassesRoot.OpenSubKey(@"http\shell\open\command\");
                 string appRegistryKeyValue = registryKey.GetValue("").ToString().Trim();
-                
+
                 //第一个双引号，到第二个双引号之间的字符串
                 int startIndex = appRegistryKeyValue.IndexOf("\"");
                 string appString = appRegistryKeyValue.Substring(startIndex + 1, appRegistryKeyValue.IndexOf("\"", startIndex + 2) - 1);
 
-                if(File.Exists(appString))
+                if (File.Exists(appString))
                 {
                     appConfig = new AppConfig
                     {
@@ -152,7 +243,7 @@ namespace AppMonitor
                         Application = @"请替换为要监视的应用程序的绝对路径",
                         IdleTime = 120
                     };
-                }               
+                }
 
                 //将默认配置写入磁盘
                 File.WriteAllText(appConfigJsonFile, new JavaScriptSerializer().Serialize(appConfig));
@@ -176,7 +267,7 @@ namespace AppMonitor
         }
 
         /// <summary>
-        /// 定时器更新
+        /// 定时器更新，监控指定进程
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -290,17 +381,19 @@ namespace AppMonitor
         /// <param name="e"></param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            timer1.Stop();
-            mouseHook.Stop();
-            keyboardHook.Stop();
+            timer1?.Stop();
+            mouseHook?.Stop();
+            keyboardHook?.Stop();
 
             //鼠标Hook
+            if (mouseHook == null) return;
             mouseHook.MouseMove -= new MouseEventHandler(keyboardHook_Action);
             mouseHook.MouseDown -= new MouseEventHandler(keyboardHook_Action);
             mouseHook.MouseUp -= new MouseEventHandler(keyboardHook_Action);
             mouseHook.MouseWheel -= new MouseEventHandler(keyboardHook_Action);
 
             //键盘HooK
+            if (keyboardHook == null) return;
             keyboardHook.KeyDown -= new KeyEventHandler(keyboardHook_Action);
             keyboardHook.KeyUp -= new KeyEventHandler(keyboardHook_Action);
             keyboardHook.KeyPress -= new KeyPressEventHandler(keyboardHook_Action);
