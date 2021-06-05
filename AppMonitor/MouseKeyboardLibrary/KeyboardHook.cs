@@ -32,14 +32,19 @@ namespace AppMonitor.MouseKeyboardLibrary
             if (nCode > -1 && (KeyDown != null || KeyUp != null || KeyPress != null))
             {
                 KeyboardHookStruct keyboardHookStruct = (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
+               
                 // Is Control being held down?
                 bool control = ((GetKeyState(VK_LCONTROL) & 0x80) != 0) || ((GetKeyState(VK_RCONTROL) & 0x80) != 0);
+                
                 // Is Shift being held down?
                 bool shift = ((GetKeyState(VK_LSHIFT) & 0x80) != 0) || ((GetKeyState(VK_RSHIFT) & 0x80) != 0);
+                
                 // Is Alt being held down?
                 bool alt = ((GetKeyState(VK_LALT) & 0x80) != 0) || ((GetKeyState(VK_RALT) & 0x80) != 0);
+                
                 // Is CapsLock on?
                 bool capslock = (GetKeyState(VK_CAPITAL) != 0);
+                
                 // Create event using keycode and control/shift/alt values found above
                 KeyEventArgs e = new KeyEventArgs(
                   (Keys)(
@@ -48,6 +53,7 @@ namespace AppMonitor.MouseKeyboardLibrary
                     (shift ? (int)Keys.Shift : 0) |
                     (alt ? (int)Keys.Alt : 0)
                     ));
+                
                 // Handle KeyDown and KeyUp events
                 switch (wParam)
                 {
@@ -68,6 +74,7 @@ namespace AppMonitor.MouseKeyboardLibrary
                         }
                         break;
                 }
+                
                 // Handle KeyPress event
                 if (wParam == WM_KEYDOWN && !handled && !e.SuppressKeyPress && KeyPress != null)
                 {

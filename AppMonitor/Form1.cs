@@ -42,9 +42,63 @@ namespace AppMonitor
         //监视配置文件的改动
         FileSystemWatcher watcher;
 
+        string appName = "AppMonitor";
+
+
         public Form1()
         {
             InitializeComponent();
+
+            this.toolStripMenuAbout.Click += ToolStripMenuAbout_Click;
+            this.toolStripMenuEditConfig.Click += ToolStripMenuEditConfig_Click;
+            this.toolStripMenuHideWindow.Click += ToolStripMenuHideWindow_Click;
+            this.toolStripMenuShowWindow.Click += ToolStripMenuShowWindow_Click;
+            this.toolStripMenuUninstall.Click += ToolStripMenuUninstall_Click;
+        }
+
+        private void ToolStripMenuUninstall_Click(object sender, EventArgs e)
+        {
+            //删除注册表项            
+            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+            if (registryKey.GetValueNames().Contains(appName))
+            {
+                registryKey.DeleteValue(appName);
+            }
+            registryKey.Close();
+
+            if (MessageBox.Show("卸载成功，是否将程序退出！", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+            {
+                //退出程序
+                Application.Exit();
+            }
+        }
+
+        private void ToolStripMenuShowWindow_Click(object sender, EventArgs e)
+        {
+            this.Invoke((EventHandler)delegate
+            {
+                Show();
+                WindowState = FormWindowState.Normal;
+            });
+        }
+
+        private void ToolStripMenuHideWindow_Click(object sender, EventArgs e)
+        {
+            this.Invoke((EventHandler)delegate
+            {
+                WindowState = FormWindowState.Minimized;
+                Hide();
+            });
+        }
+
+        private void ToolStripMenuEditConfig_Click(object sender, EventArgs e)
+        {
+            Process.Start("notepad.exe", appConfigJsonFile);
+        }
+
+        private void ToolStripMenuAbout_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("About"); ;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -160,7 +214,6 @@ namespace AppMonitor
         /// </summary>
         private void CheckAutoStart()
         {
-            string appName = "AppMonitor";
             RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
             if (registryKey.GetValueNames().Contains(appName))
             {
@@ -172,11 +225,26 @@ namespace AppMonitor
             }
 
             //路径不对，删除此项,需要权限
+            //CheckIdentity();
+
+            //以管理员权限运行，设置注册表后，程序退出！
+            //创建注册表
+            registryKey.SetValue(appName, Application.ExecutablePath);
+            registryKey.Close();
+
+            //退出
+            //MessageBox.Show("设置完毕，请双击重新启动程序！");
+            //Application.Exit();
+            //return;
+        }
+
+        void CheckIdentity()
+        {
             WindowsIdentity current = WindowsIdentity.GetCurrent();
             WindowsPrincipal windowsPrincipal = new WindowsPrincipal(current);
             if (windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator) == false)
             {
-                MessageBox.Show("首次执行，请用管理员权限运行！");
+                MessageBox.Show("请用管理员权限运行！");
 
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.UseShellExecute = true;
@@ -195,16 +263,6 @@ namespace AppMonitor
                 Application.Exit();
                 return;
             }
-
-            //以管理员权限运行，设置注册表后，程序退出！
-            //创建注册表
-            registryKey.SetValue(appName, Application.ExecutablePath);
-            registryKey.Close();
-
-            //退出
-            MessageBox.Show("设置完毕，请双击重新启动程序！");
-            Application.Exit();
-            return;
         }
 
         /// <summary>
@@ -455,5 +513,7 @@ namespace AppMonitor
             //定时器
             timer1.Elapsed -= new System.Timers.ElapsedEventHandler(Timer_TimesUp);
         }
+
+
     }
 }
