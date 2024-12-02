@@ -14,11 +14,12 @@
 软件默认打开 Edge浏览器，添加参数，使其全屏模式。
 
 # 配置文件
-启动快捷方式：
+
+## 启动快捷方式：
 
 %AppData%\Microsoft\Windows\Start Menu\Programs\Startup\AppMonitor.lnk
 
-AppMonitor配置文件:
+## AppMonitor配置文件:
 
 C:\Users\[当前登录用户名]\AppData\Local\Zmrbak\AppMonitor\AppMonitor.Json
 
