@@ -114,6 +114,13 @@ namespace AppMonitor
             {
                 //从配置文件中获取参数
                 appConfig = new JavaScriptSerializer().Deserialize<AppConfig>(File.ReadAllText(appConfigJsonFile));
+
+                // 设置任务栏自动隐藏
+                if (appConfig.IsTaskbarAutoHide == true)
+                {
+                    TaskbarAutoHide taskbarAutoHide = new TaskbarAutoHide();
+                    taskbarAutoHide.SetTaskbarState(TaskbarAutoHide.AppBarStates.AutoHide);
+                }
             }
             else
             {

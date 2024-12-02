@@ -1,4 +1,6 @@
-﻿namespace AppMonitor
+﻿using System;
+
+namespace AppMonitor
 {
     public class AppConfig
     {
@@ -14,5 +16,10 @@
         /// 空闲时间
         /// </summary>        
         public int IdleTime { set; get; } = 120;
+
+        /// <summary>
+        /// 任务栏是否自动隐藏
+        /// </summary>
+        public Boolean IsTaskbarAutoHide { set; get; }=false;
     }
 }
