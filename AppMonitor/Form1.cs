@@ -59,14 +59,13 @@ namespace AppMonitor
             keyboardHook.Start();
 
             //启动定时器
-            if (appConfig.IdleTime != 0)
-            {
-                timer1 = new System.Timers.Timer();
-                timer1.Interval = 1000;
-                timer1.Enabled = true;
-                timer1.Elapsed += new System.Timers.ElapsedEventHandler(Timer_TimesUp);
-                timer1.Start();
-            }
+
+            timer1 = new System.Timers.Timer();
+            timer1.Interval = 1000;
+            timer1.Enabled = true;
+            timer1.Elapsed += new System.Timers.ElapsedEventHandler(Timer_TimesUp);
+            timer1.Start();
+
 
             //当前时间
             LastTime = DateTime.Now;
@@ -257,6 +256,8 @@ namespace AppMonitor
         /// </summary>
         private void ShutdownProcess()
         {
+            if (appConfig.IdleTime == 0) return;
+
             if (processName != null)
             {
                 var processes1 = Process.GetProcessesByName(processName);
